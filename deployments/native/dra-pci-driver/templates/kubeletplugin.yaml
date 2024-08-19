@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dra-pci-driver-kubeletplugin
+  namespace: dra-pci-driver
+  labels:
+    app.kubernetes.io/name: dra-pci-driver
+    app.kubernetes.io/instance: dra-pci-driver
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dra-pci-driver
+      app.kubernetes.io/instance: dra-pci-driver
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dra-pci-driver
+        app.kubernetes.io/instance: dra-pci-driver
+    spec:
+      serviceAccountName: dra-pci-driver-service-account
+      priorityClassName: system-node-critical
+      initContainers:
+        - name: init
+          image: registry:5000/registry.example.com/dra-pci-driver:v0.1.0
+          imagePullPolicy: Always
+          command: ["set-nas-status", "--status", "NotReady"]
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: plugin
+          image: registry:5000/registry.example.com/dra-pci-driver:v0.1.0
+          imagePullPolicy: Always
+          command: ["kubelet-plugin"]
+          env:
+            - name: CDI_ROOT
+              value: /var/run/cdi
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - name: plugins-registry
+              mountPath: /var/lib/kubelet/plugins_registry
+            - name: plugins
+              mountPath: /var/lib/kubelet/plugins
+            - name: cdi
+              mountPath: /var/run/cdi
+          securityContext:
+            privileged: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsUser: 0
+            seccompProfile:
+              type: RuntimeDefault
+          lifecycle:
+            preStop:
+              exec:
+                command: ["set-nas-status", "--status", "NotReady"]
+      volumes:
+        - name: plugins-registry
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+        - name: plugins
+          hostPath:
+            path: /var/lib/kubelet/plugins
+        - name: cdi
+          hostPath:
+            path: /var/run/cdi

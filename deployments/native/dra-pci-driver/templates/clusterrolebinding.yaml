@@ -1,0 +1,14 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dra-pci-driver-role-binding
+  namespace: dra-pci-driver
+subjects:
+  - kind: ServiceAccount
+    name: dra-pci-driver-service-account
+    namespace: dra-pci-driver
+roleRef:
+  kind: ClusterRole
+  name: dra-pci-driver-role
+  apiGroup: rbac.authorization.k8s.io

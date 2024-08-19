@@ -1,0 +1,20 @@
+---
+apiVersion: resource.k8s.io/v1alpha2
+kind: ResourceClass
+metadata:
+  name: pci.kubevirt.io
+driverName: pci.resource.kubevirt.io
+parametersRef:
+  apiGroup: pci.resource.kubevirt.io
+  kind: PciClassParameters
+  name: pci-params
+---
+apiVersion: pci.resource.kubevirt.io/v1alpha1
+kind: DeviceClassParameters
+metadata:
+  name: pci-params
+spec:
+  deviceSelector:
+    - resourceName: "devices.kubevirt.io/nvme"
+      pciVendorSelector: "1b36:0010"
+      type: "pci"
