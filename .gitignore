@@ -1,0 +1,13 @@
+# Ignore .cache directory
+.cache/
+
+# Ignore vendor directory
+vendor/
+
+# Ignore swap files
+[._]*.sw[a-p]
+
+# Ignore .bak and .idea directories
+.bak/
+.idea/
+.del/
