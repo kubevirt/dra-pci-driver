@@ -1,4 +1,7 @@
-# KubeVirt DRA PCI Driver 
+# KubeVirt DRA PCI Driver
+
+**This repository holds currently a Proof of Concept and DRA isn't currently
+supported by KubeVirt**
 
 <p align="center">
 <img src="https://github.com/kubevirt/community/raw/main/logo/KubeVirt_icon.png" width="100">
