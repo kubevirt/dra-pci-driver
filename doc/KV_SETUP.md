@@ -89,7 +89,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
        DynamicResourceAllocation: true
      ```
 
-## Step 4: Bind Devices to `vfio-pci` Driver
+## Step 3: Bind Devices to `vfio-pci` Driver
 
 1. **SSH into the control plane node:**
 
@@ -97,7 +97,37 @@ This guide will walk you through the steps to install and use KubeVirt with the 
    cluster-up/ssh.sh node01
    ```
 
-2. **Create a script to unbind the device from its default driver and bind it to the `vfio-pci` driver:**
+2. **Change GRUB file**
+
+   ```bash
+   sudo vi /etc/default/grub
+   ```
+
+   Add `intel_iommu=on` to `GRUB_CMDLINE_LINUX`
+
+   ```bash
+   GRUB_CMDLINE_LINUX="nofb splash=quiet console=tty0 ... intel_iommu=on
+   ```
+
+   Make the grub file
+
+   ```bash
+   sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+   ```
+
+   Reboot the system
+
+   ```bash
+   sudo reboot
+   ```
+
+   Enable `vfio-pci`
+
+   ```bash
+   sudo modprobe vfio-pci
+   ```
+
+3. **Create a script to unbind the device from its default driver and bind it to the `vfio-pci` driver:**
 
    ```bash
    vi pci-nvme-bind.sh
@@ -128,7 +158,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
    echo "Device $PCI_ADDRESS has been successfully bound to vfio-pci."
    ```
 
-3. **Make the script executable and use it by passing the PCI address of the devices as an argument. The address can be found using `lspci -Dnn | grep NVM`:**
+4. **Make the script executable and use it by passing the PCI address of the devices as an argument. The address can be found using `lspci -Dnn | grep NVM`:**
 
    ```bash
    chmod +x pci-nvme-bind.sh
@@ -136,7 +166,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
    sudo ./pci-nvme-bind.sh 0000:00:08.0
    ```
 
-4. **Verify if the devices are bound to the `vfio-pci` driver:**
+5. **Verify if the devices are bound to the `vfio-pci` driver:**
 
    ```bash
    lspci -Dnnk -s 0000:00:07.0
@@ -156,13 +186,13 @@ This guide will walk you through the steps to install and use KubeVirt with the 
        Kernel modules: nvme
    ```
 
-5. **Disable SELinux inside the node:**
+6. **Disable SELinux inside the node:**
 
    ```bash
    sudo setenforce 0
    ```
 
-## Step 3: Verification for Resource API
+## Step 4: Verification for Resource API
 
 1. **Check if your Kubernetes cluster supports dynamic resource allocation:**
 
@@ -182,7 +212,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
      error: the server does not have a resource type "resourceclasses"
      ```
 
-## Step 4: Deploying the KubeVirt DRA PCI Driver
+## Step 5: Deploying the KubeVirt DRA PCI Driver
 
 1. **Download the KubeVirt DRA PCI Driver repository:**
 
@@ -219,7 +249,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
 5. **Verify Node State:**
 
    ```bash
-   kubectl describe node node01 -n dra-pci-driver
+   kubectl describe nas node01 -n dra-pci-driver
    ```
 
    The Spec should contain only Allocatable Devices:
@@ -246,7 +276,7 @@ This guide will walk you through the steps to install and use KubeVirt with the 
 7. **Verify if the PCI device is allocated:**
 
    ```bash
-   kubectl describe node node01 -n dra-pci-driver
+   kubectl describe nas node01 -n dra-pci-driver
    ```
 
    The Spec should contain Allocated Devices:
